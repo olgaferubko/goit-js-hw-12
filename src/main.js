@@ -7,49 +7,80 @@ import "simplelightbox/dist/simple-lightbox.min.css";
 
 const form = document.querySelector('.search-form');
 const gallery = document.querySelector('.gallery');
-const loader = document.getElementById('loader');
+const loadMoreButton = document.getElementById('load-more');
+let query = '';
+let page = 1;
 let lightbox;
+const perPage = 15;
 
-function showLoader() {
-  loader.style.display = 'block';
-}
-
-function hideLoader() {
-  loader.style.display = 'none';
-}
-
-form.addEventListener('submit', event => {
+form.addEventListener('submit', async event => {
   event.preventDefault();
+  query = event.target.elements.searchQuery.value.trim();
 
-  const query = event.target.elements.searchQuery.value.trim();
   if (!query) {
     iziToast.warning({ title: 'Попередження', message: 'Будь ласка, введіть запит' });
     return;
   }
 
+  page = 1;
   gallery.innerHTML = '';
-  showLoader(); 
+  loadMoreButton.style.display = 'none';
 
-  fetchImages(query)
-    .then(data => {
-      hideLoader();
+  try {
+    const data = await fetchImages(query, page, perPage);
 
-      if (data.hits.length === 0) {
-        iziToast.error({ title: 'Помилка', message: 'Нічого не знайдено' });
-        return;
-      }
+    if (data.hits.length === 0) {
+      iziToast.error({ title: 'Помилка', message: 'Нічого не знайдено' });
+      return;
+    }
 
-      renderImages(data.hits);
+    renderImages(data.hits);
+    loadMoreButton.style.display = 'block';
+    initializeLightbox();
 
-      if (lightbox) {
-        lightbox.refresh();
-      } else {
-        lightbox = new SimpleLightbox('.gallery a');
-      }
-    })
-    .catch(error => {
-      hideLoader(); 
-      iziToast.error({ title: 'Помилка', message: 'Не вдалося завантажити зображення' });
-      console.error(error);
-    });
+    if (page * perPage >= data.totalHits) {
+      loadMoreButton.style.display = 'none';
+      iziToast.info({ title: 'Інформація', message: "We're sorry, but you've reached the end of search results." });
+    }
+  } catch (error) {
+    iziToast.error({ title: 'Помилка', message: 'Не вдалося завантажити зображення' });
+  }
 });
+
+loadMoreButton.addEventListener('click', async () => {
+  page += 1;
+
+  try {
+    const data = await fetchImages(query, page, perPage);
+    renderImages(data.hits);
+
+    if (lightbox) {
+      lightbox.refresh();
+    }
+
+    if (page * perPage >= data.totalHits) {
+      loadMoreButton.style.display = 'none';
+      iziToast.info({ title: 'Інформація', message: "We're sorry, but you've reached the end of search results." });
+    }
+    
+    smoothScroll();
+  } catch (error) {
+    iziToast.error({ title: 'Помилка', message: 'Не вдалося завантажити зображення' });
+  }
+});
+
+function initializeLightbox() {
+  if (lightbox) {
+    lightbox.refresh();
+  } else {
+    lightbox = new SimpleLightbox('.gallery a');
+  }
+}
+
+function smoothScroll() {
+  const { height: cardHeight } = gallery.firstElementChild.getBoundingClientRect();
+  window.scrollBy({
+    top: cardHeight * 2,
+    behavior: 'smooth',
+  });
+}
