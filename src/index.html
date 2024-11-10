@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Vanilla App Template</title>
+    <link rel="stylesheet" href="./css/styles.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/loaders.css/0.1.2/loaders.min.css"
+    />
+  </head>
+  <body>
+    <main>
+      <form class="search-form">
+        <input
+          class="search-input"
+          type="text"
+          name="searchQuery"
+          placeholder="Search images..."
+        />
+        <button class="submit-button" type="submit">Search</button>
+      </form>
+      <div class="loader" id="loader" style="display: none">
+        <div class="ball-pulse">
+          <div></div>
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+
+      <div class="gallery"></div>
+    </main>
+    <script type="module" src="./main.js"></script>
+  </body>
+</html>
